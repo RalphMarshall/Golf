@@ -32,7 +32,8 @@ sub shortenNames($@) {
 
     for (@names) {
         my $copy = $_;
-        push @retval, $copy =~ s/$prefix/.../;
+        $copy =~ s/$prefix/.../;
+        push @retval, $copy;
     }
 
     return @retval;
@@ -65,16 +66,34 @@ sub extractClasses(@) {
         open FILE, "$nextFile" || usage("Failed to read $nextFile: $!");
 
         my $wholeFile = <FILE>;
-        $wholeFile =~ tr/\n\r,>/ /;     # Convert newlines and useless punctuation to whitespace
+        $wholeFile =~ tr/\n\r,>+/ /;      # Convert newlines and useless punctuation to whitespace
 
-        $wholeFile =~ s@(/\*.*?\*/)@@g; # Remove comments
-        $wholeFile =~ s/{.*?}//g;       # Remove body of the CSS - all we want is the selectors
-        $wholeFile =~ s/\[.*?\]//g;     # Remove attribute qualifications from selectors
+        $wholeFile =~ s@(/\*.*?\*/)@@g;  # Remove comments
+        $wholeFile =~ s/\@import.*?;//g; # Remove css import statements
+        $wholeFile =~ s/{.*?}/ /g;       # Remove body of the CSS - all we want is the selectors
+        $wholeFile =~ s/\[.*?\]//g;      # Remove attribute qualifications from selectors
 
-        say $wholeFile;
+        $wholeFile =~ s/(\S)[.]/$1 ./g;  # Separate out all selectors that look like ".one.two" into ".one .two"
+
+        my @allClasses = split(/\s+/, $wholeFile);
+        map { s/:.*// } @allClasses;     # Remove any pseudo classes
+
+        # Stuff results for this file onto our list for all files
+        push @retval, @allClasses;
     }
 
-    return @retval;
+    # Remove duplicates
+    my %uniq;
+    map {
+        # Let the hash table collapse duplicate values for us
+        $uniq{$_} = 1;
+    } grep {
+        # Strip out standard HTML element names and the * selector
+        !m/^(\*|a|body|button|div|h[1-6]|header|hr|html|img|li|p|section|span|ul)$/i
+    } @retval;
+
+    # Finally return the sorted list of unique selectors
+    return sort keys %uniq;
 }
 
  MAIN: {
@@ -95,6 +114,7 @@ sub extractClasses(@) {
      @rawOldClasses = extractClasses(@oldFiles);
      @rawNewClasses = extractClasses(@newFiles);
 
+     say "List of unique selectors across all old files";
      for (@rawOldClasses) {
          say $_;
      }
