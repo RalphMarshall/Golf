@@ -87,13 +87,14 @@ sub extractClasses(@) {
         my $wholeFile = <FILE>;
         $wholeFile =~ tr/\n\r,>+/ /;      # Convert newlines and useless punctuation to whitespace
 
-        $wholeFile = doPrune($wholeFile, 's@/\*.*?\*/@@g', 'Comments');            
-        $wholeFile = doPrune($wholeFile, 's/\@import.*?;//g', 'CSS Import');       
+        $wholeFile = doPrune($wholeFile, 's@/\*.*?\*/@@g', 'Comments');
+        $wholeFile = doPrune($wholeFile, 's/\@import.*?;//g', 'CSS Import');
+        $wholeFile = doPrune($wholeFile, 's/::?(-|\w)+(\(.*?\))?//g', 'Pseudo classes');
         $wholeFile = doPrune($wholeFile, 's/\@media.*?(?={)//g', 'Media queries');
         $wholeFile = doPrune($wholeFile, 's/{.*?}/ /g', 'CSS Body');               # Remove body of the CSS - all we want is the selectors
         $wholeFile = doPrune($wholeFile, 's/\[.*?\]//g', 'Attribute selector');    # Remove attribute qualifications from selectors
         $wholeFile = doPrune($wholeFile, 's/(\S)[.]/$1 ./g');                      # Separate out all selectors that look like ".one.two" into ".one .two"
-#        $wholeFile = doPrune($wholeFile, 's/:.*?(\(.*?\))??(\b|\.)//g', 'Pseudo clases');
+
         my @allClasses = split(/\s+/, $wholeFile);
         # map { s/:.*// } @allClasses;     # Remove any pseudo classes
 
@@ -117,6 +118,52 @@ sub extractClasses(@) {
     return sort keys %uniq;
 }
 
+sub reportChanges($$) {
+    my ($oldRef, $newRef) = @_;
+    my @oldClasses = @$oldRef;
+    my @newClasses = @$newRef;
+
+    # Separate out into classes only in the old CSS, those only in the new CSS,
+    # and those common to both.
+    my (@onlyOld, @onlyNew, @common);
+
+    # Lists are already sorted, so just do a basic merge
+    while (@oldClasses || @newClasses) {
+
+        my $nextToken;
+
+        print $LOG "Old head is ", @oldClasses ? $oldClasses[0] : "empty",
+        ", New head is ", @newClasses ? $newClasses[0] : "empty",
+        " so ";
+
+        if (!@oldClasses) {
+            # Only have new classes left
+            push @onlyNew, @newClasses;
+            print $LOG join(", ", @newClasses), " all added to new classes\n";
+        } elsif (!@newClasses) {
+            # Have only old classes left
+            push @onlyOld, @oldClasses;
+            print $LOG join(", ", @oldClasses), " all added to old classes\n";
+        } elsif ($oldClasses[0] eq $newClasses[0]) {
+            # Matching case
+            $nextToken = shift @oldClasses;
+            shift @newClasses;
+            push @common, $nextToken;
+            print $LOG "$nextToken added to common\n";
+        } elsif ($oldClasses[0] lt $newClasses[0]) {
+            # Found an old class not in the new classes
+            $nextToken = shift @oldClasses;
+            push @onlyOld, $nextToken;
+            print $LOG "$nextToken added to old\n"
+        } else {
+            # Found a new class not in the old classes
+            $nextToken = shift @newClasses;
+            push @onlyNew, $nextToken;
+            print $LOG "$nextToken added to new\n";
+        }
+    }
+}
+
  MAIN: {
      my ($oldDir, $newDir) = @ARGV;
 
@@ -126,7 +173,7 @@ sub extractClasses(@) {
 
      open $LOG, ">cssDiff.log" || die "Unable to write log file: $!\n";
      open $OUT, ">cssDiff.out" || die "Unable to write result file: $!\n";
-     
+
      say $OUT "Old root directory: $oldDir";
      say $OUT "New root directory: $newDir";
 
@@ -138,8 +185,5 @@ sub extractClasses(@) {
      @rawOldClasses = extractClasses(@oldFiles);
      @rawNewClasses = extractClasses(@newFiles);
 
-     say $OUT "List of unique selectors across all old files";
-     for (@rawOldClasses) {
-         say $OUT $_;
-     }
+     reportChanges(\@rawOldClasses, \@rawNewClasses);
 }
