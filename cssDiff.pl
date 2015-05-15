@@ -118,8 +118,17 @@ sub extractClasses(@) {
     return sort keys %uniq;
 }
 
-sub reportChanges($$) {
-    my ($oldRef, $newRef) = @_;
+sub reportSubset($@) {
+    my ($label, @classes) = @_;
+
+    say $OUT "\n################################################################";
+    say $OUT "CSS Classes present $label";
+    say $OUT "################################################################";
+    say $OUT join("\n", @classes);
+}
+
+sub reportChanges($$$) {
+    my ($oldRef, $newRef, $verbose) = @_;
     my @oldClasses = @$oldRef;
     my @newClasses = @$newRef;
 
@@ -162,10 +171,16 @@ sub reportChanges($$) {
             print $LOG "$nextToken added to new\n";
         }
     }
+
+    say $OUT "------------------- Start of report -------------------";
+    reportSubset('only in the old file', @onlyOld);
+    reportSubset('only in the new file', @onlyNew);
+    reportSubset('in both files', @common) if $verbose;
+    say $OUT "-------------------- End of report --------------------";
 }
 
  MAIN: {
-     my ($oldDir, $newDir) = @ARGV;
+     my ($oldDir, $newDir, $flags) = @ARGV;
 
      my (@oldFiles, @rawOldClasses, @newFiles, @rawNewClasses);
 
@@ -185,5 +200,5 @@ sub reportChanges($$) {
      @rawOldClasses = extractClasses(@oldFiles);
      @rawNewClasses = extractClasses(@newFiles);
 
-     reportChanges(\@rawOldClasses, \@rawNewClasses);
+     reportChanges(\@rawOldClasses, \@rawNewClasses, $flags && $flags =~ /-v|--verbose/);
 }
