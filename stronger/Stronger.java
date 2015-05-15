@@ -7,6 +7,7 @@ public class Stronger {
 
     static final String[] defaultPlayers = {
         "java Analyst",
+        "java BroBot",
         "java Bully",
         "java Coward",
         "java Equaliser",

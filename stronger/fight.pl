@@ -3,8 +3,6 @@
     use strict;
     use warnings;
     
-open LOG, ">>fight.log" || die "Unable to write log: $!\n";
-
     # First round
     if (!@ARGV) {
         print "ok\n";
@@ -40,7 +38,6 @@ open LOG, ">>fight.log" || die "Unable to write log: $!\n";
         
         if ($action == $self) {
             # Bastard hit me!
-            print LOG "Just hit by $id with life $life, power $power\n";
             if ($power > $myMaxAttacker) {
                 $myMaxAttacker = $power;
                 $myMaxAttackerId = $id;
@@ -73,27 +70,21 @@ open LOG, ">>fight.log" || die "Unable to write log: $!\n";
     if (!$numAttackers) {
         # Everybody is standing around, so let's mix it up
         $myAction = $preferredTarget;
-        print LOG "Nothing happening! Attacking $myAction\n";
     } elsif (defined $myMaxAttackerId) {
         # My momma told me never to stand there and be hit
         $myAction = $myMaxAttackerId;
-        print LOG "An eye for an eye attack on $myAction\n";
     } elsif ($amWeak || $living == 1) {
         # Either we're down to two bots, or I'm fairly weak. Atack!!!
         $myAction = $preferredTarget;
-        print LOG "Close to the end. Attacking $myAction\n";
     } elsif ($myPower < $totPower/$living) {
         # Just lash out at random so we do not lose all of
         # our power through permanent defense
         $myAction = $preferredTarget;
-        print LOG "Power-preserving attack on $myAction (my power $myPower vs. avg. ", $totPower/$living, ")\n";
     } else { 
         # Work up some courage/power by drinking beer
         # in the corner, simultaneously depleting
         # our own life force but building up power through
         # repeated self-harm
-        print LOG "Staying in the corner\n";
     }
-        
     
     print "$myAction\n";
