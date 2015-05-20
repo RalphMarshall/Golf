@@ -14,7 +14,6 @@ public class Stronger {
         "/bin/bash copycat.sh",
         "java Coward",
         "java Equaliser",
-        "perl fight.pl",
         "java Guardian",
         "java Hero",
         "java PhantomMenace",
@@ -29,6 +28,7 @@ public class Stronger {
         "python TrevorPhilips.py",
         "java Wiisniper"
     };
+    final int turnLimit=300;
     final int timeout = 1000;
     final int startLife = 1000;
     final int startPower = 10;
@@ -45,7 +45,7 @@ public class Stronger {
         init(args);
         for(int i=0;i<numRounds;i++){
             Collections.shuffle(players);
-            runGame(i);
+            runGame(i+1);
         }
         Collections.sort(players);
         for(Player player : players)
@@ -57,7 +57,7 @@ public class Stronger {
         for(Player player : players)
             player.reset();
         int turn = 0;
-        while(turn++ < 175){
+        while(turn++ < turnLimit){
             if(aliveCount() < 2)
                 break;
             log("Turn " + turn + ", Round " + roundNum);
@@ -144,7 +144,7 @@ public class Stronger {
                 }
         for (Player player : players)
             if (player.life > 0)
-                player.lastDeath += 175;
+                player.lastDeath += turnLimit;
         
     }
 
