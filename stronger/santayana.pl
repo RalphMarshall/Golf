@@ -51,8 +51,8 @@
         # Our target is based on the historically
         # strongest opponent, independent of current state,
         # unless they are actually dead
-        if ($life > 0 && $state{$id}->[1] > $maxPower) {
-            $maxPower = $state{$id}->[1];
+        if ($life > 0 && $state{$id}->[0] > $maxPower) {
+            $maxPower = $state{$id}->[0];
             $maxOpponentId = $id;
         }
     }
