@@ -7,14 +7,27 @@ public class Stronger {
 
     static final String[] defaultPlayers = {
         "java Analyst",
+        "python Berserker.py",
+        "python Boxer.py",
         "java BroBot",
         "java Bully",
+        "/bin/bash copycat.sh",
         "java Coward",
         "java Equaliser",
+        "perl fight.pl",
+        "java Guardian",
         "java Hero",
+        "java PhantomMenace",
+        "python Precog.py",
         "java Psycho",
         "java Revenger",
-        "perl fight.pl",
+        "perl santayana.pl",
+        "python SemiRandom.py",
+        "python snapping_turtle.py",
+        "perl tactician.pl",
+        "java Tank",
+        "python TrevorPhilips.py",
+        "java Wiisniper"
     };
     final int timeout = 1000;
     final int startLife = 1000;
@@ -32,14 +45,14 @@ public class Stronger {
         init(args);
         for(int i=0;i<numRounds;i++){
             Collections.shuffle(players);
-            runGame();
+            runGame(i);
         }
         Collections.sort(players);
         for(Player player : players)
             System.out.println(player.toString());
     }
 
-    void runGame(){
+    void runGame(int roundNum){
         log("Player Count: " + players.size());
         for(Player player : players)
             player.reset();
@@ -47,7 +60,7 @@ public class Stronger {
         while(turn++ < 175){
             if(aliveCount() < 2)
                 break;
-            log("Turn " + turn);
+            log("Turn " + turn + ", Round " + roundNum);
             List<Player> clones = new ArrayList<Player>();
             for(Player player : players)
                 clones.add(player.copy());
@@ -95,7 +108,7 @@ public class Stronger {
                             }
                         }
                     } catch (Exception e){
-                        log(player.cmd + " returned an invalid command: (" + clone.lastAction + ")");
+                        // log(player.cmd + " returned an invalid command: (" + clone.lastAction + ")");
                         clone.power--;
                     }
                 }
@@ -117,7 +130,8 @@ public class Stronger {
                 if(player.power < 1)
                     player.power = 1;
                 marker = player.life == maxLife ? "*" : player.life <= 0 ? "-" : player.life > sumLife/totLive ? ">" : " ";
-                log(player.life + "\t\t" + player.power + "\t\t(" + player.id + ")\t" + marker + player.cmd + "\t" + player.scoreLife + "\t" + player.scoreRounds + "\t" + player.lastDeath);
+                log(String.format("%4s %4s (%2s) %30s%s %6s %2s %6s", player.life, player.power, player.id, player.cmd, marker, player.scoreLife, player.scoreRounds, player.lastDeath));
+//                log(player.life + "\t\t" + player.power + "\t\t(" + player.id + ")\t" + marker + player.cmd + "\t\t" + player.scoreLife + "\t" + player.scoreRounds + "\t" + player.lastDeath);
             }
             log("\n");
         }
@@ -157,7 +171,7 @@ public class Stronger {
                 return "T";
             return reply;
         }catch(Exception e){
-            e.printStackTrace();
+            //            e.printStackTrace();
             return "Exception: " + e.getMessage();
         }
     }
