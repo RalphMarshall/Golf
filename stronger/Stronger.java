@@ -16,6 +16,7 @@ public class Stronger {
         "java Equaliser",
         "java Guardian",
         "java Hero",
+        "java Pacifier",
         "java PhantomMenace",
         "python Precog.py",
         "java Psycho",
@@ -32,7 +33,7 @@ public class Stronger {
     final int timeout = 1000;
     final int startLife = 1000;
     final int startPower = 10;
-    final int numRounds = 150;
+    final int numRounds = 15;
 
     boolean log = false;
     List<Player> players;
