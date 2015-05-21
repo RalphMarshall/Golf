@@ -32,7 +32,7 @@ public class Stronger {
     final int timeout = 1000;
     final int startLife = 1000;
     final int startPower = 10;
-    final int numRounds = 15;
+    final int numRounds = 150;
 
     boolean log = false;
     List<Player> players;
