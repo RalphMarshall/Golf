@@ -16,6 +16,7 @@ public class Stronger {
         "java Equaliser",
         "java Guardian",
         "java Hero",
+        "java MetaFighter",
         "java Pacifier",
         "java PhantomMenace",
         "python Precog.py",
