@@ -19,7 +19,7 @@ import java.io.FileWriter;
  */
 public class Tournament
 {
-    static final int elections = 10000; //number of elections to be performed
+    static final int elections = 1000000; //number of elections to be performed
     static final int debug = 0;
     public static void main(String [] args)
     {
@@ -46,12 +46,18 @@ public class Tournament
         }
 
         for(int e = 0; e < elections; e++) {
-            //            System.out.printf("%nRound %d%n", e);
             Game g = new Game(players,debug);
             double[] results = g.run();
             for(int p = 0; p < players.length; p++) {
                 score.put(players[p], score.get(players[p]) + results[p]);
-                //                System.out.printf("Player %s scored %f%n", players[p].getName(), results[p]);
+            }
+
+            if (e > 0) {
+                if (e % 10000 == 0) {
+                    System.out.printf("Done with round %d%n", e);
+                } else if (e % 1000 == 0) {
+                    System.out.print(".");
+                }
             }
         }
 
