@@ -1,0 +1,88 @@
+var r2 = Math.sqrt(2);
+if (this.id === -1) {
+  // red team 1
+  // go after flag regardless of what is going on
+  if (eFlag.pickedUpBy !== null && eFlag.pickedUpBy.id === this.id) {
+    return {
+      x: 0,
+      y: 2
+    };
+  }
+  return {
+    x: this.x < eFlag.x ? r2 : -r2,
+    y: this.y < eFlag.y ? r2 : -r2
+  };
+}
+if (this.id === -2) {
+  // blue team 1
+  // a) go after opposing team members on your side b) get the other flag if no enemies on your side
+  var closestEnemy = null;
+  for (var i = 0; i < enemies.length; ++i) {
+    if (enemies[i].y < HEIGHT/2 && (closestEnemy === null || enemies[i].y < closestEnemy.y)) {
+      closestEnemy = enemies[i];
+    }
+  }
+  if (closestEnemy !== null) {
+    return {
+      x: this.x < closestEnemy.x ? r2 : -r2,
+      y: this.y < closestEnemy.y ? r2 : -r2
+    };
+  }
+  if (eFlag.pickedUpBy !== null && eFlag.pickedUpBy.id === this.id) {
+    return {
+      x: 0,
+      y: -2
+    };
+  }
+  return {
+    x: this.x < eFlag.x ? r2 : -r2,
+    y: this.y < eFlag.y ? r2 : -r2
+  };
+}
+if (this.id === -3) {
+  // red team 2
+  // a) defend the flag b) if at least half of enemies in jail and no enemies on this side, free jailed reds and quickly return
+  var closestEnemy = null;
+  for (var i = 0; i < enemies.length; ++i) {
+    if (enemies[i].y > HEIGHT/2 && (closestEnemy === null || enemies[i].y > closestEnemy.y)) {
+      closestEnemy = enemies[i];
+    }
+  }
+  if (closestEnemy !== null) {
+    return {
+      x: this.x < closestEnemy.x ? r2 : -r2,
+      y: this.y < closestEnemy.y ? r2 : -r2
+    };
+  }
+  if (enemies.length / eJailed.length <= 1 && tJailed.length > 0) {
+    return {
+      x: this.x < FIELD_PADDING ? r2 : -r2,
+      y: this.y < FIELD_PADDING ? r2 : -r2
+    };
+  }
+  if (this.y < 350/2) return {x: 0, y: 2};
+  return {
+    x: this.x < tFlag.x ? r2 : -r2, 
+    y: this.y < tFlag.y ? r2 : -r2
+  };
+}
+if (this.id === -4) {
+  // blue team 2
+  // a) try freeing jail if there are jailed team members b) capture the flag
+  if (tJailed.length > 0) {
+    return {
+      x: this.x < WIDTH - FIELD_PADDING ? r2 : -r2,
+      y: this.y < HEIGHT - FIELD_PADDING ? r2 : -r2
+    };
+  }
+  if (eFlag.pickedUpBy !== null && eFlag.pickedUpBy.id === this.id) {
+    return {
+      x: 0,
+      y: -2
+    };
+  }
+  return {
+    x: this.x < eFlag.x ? r2 : -r2,
+    y: this.y < eFlag.y ? r2 : -r2
+  };
+}
