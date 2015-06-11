@@ -17,15 +17,14 @@
       (while (> height 0)
         (move-to-column start-column)
         (delete-char (round cur-width))
-        (insert-char 48 cur-width)
+        (insert-char 48 (round cur-width))
         (forward-line 1)
         (setq height (1- height))
         (setq cur-width (+ cur-width line-delta))
         ))))
 
-(defun test-so-far ()
+(defun golf-test-so-far ()
   (interactive)
-  (delete-region 0 (point-max))
   (golf-write-zero-rectangle 20 30)
   (golf-replace-triangle 5 11 1 11 1))
 
