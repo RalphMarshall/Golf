@@ -14,10 +14,10 @@ public class Main {
 
     public static int HAND_GOAL = 20;
 
-    private static boolean isDebug = false;
+    private static boolean isDebug = true;
 
     public static void main(String[] args) {
-        Player[] players = {new DumbBoldPlayer(), new CincinnatiKid(), new DumbCautiousPlayer()};
+        Player[] players = {new DumbBoldPlayer(), new CincinnatiKid(), new DumbCautiousPlayer(), new AustinPowers(), new Bastila(), new Nestor()};
         int[] wins = new int[players.length];
 
         int [] winningScores = new int[20];
@@ -26,7 +26,7 @@ public class Main {
         }
 
         double totalWins = 0;
-        for (int numRounds = 0; numRounds < 1000; numRounds++) {
+        for (int numRounds = 0; numRounds < 1000000; numRounds++) {
 
             for(int a = 0; a < players.length - 1; a++) {
                 for(int b = a + 1; b < players.length; b++) {
@@ -43,6 +43,7 @@ public class Main {
         for(int i = 0; i < players.length; i++) {
             System.out.println(players[i].name+": " + wins[i] + " " + ((double) wins[i]/totalWins));
         }
+
         for (int i = 0; i < winningScores.length; i++) {
             int actualScore = i+1;
             System.out.println("Wins for score " + actualScore + "=" + winningScores[i] + ", " + winningScores[i]/totalWins);
