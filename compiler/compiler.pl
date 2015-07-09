@@ -61,23 +61,57 @@ sub getNum() {
     return $retval;
 }
 
-sub emit($) {
-    my ($string) = @_;
-    print "\t$string";
+sub emit(@) {
+    print "\t", @_;
 }
 
-sub emitLn($) {
-    my ($string) = @_;
-    say "\t$string";
+sub emitLn(@) {
+    say "\t", @_;
 }
 
 sub init(@) {
-    my (@args) = @_;
-    open (INFILE, "<$args[0]") || die("Unable to open $args[0] as input file");
-    @input = <INFILE>;
+    @input = (split '', <>);
     getChar();
 }
 
+################################################################
+# Lesson Two
+################################################################
+
+sub term() {
+    emitLn('$d0 = ', getNum(), ";");
+}
+
+sub expression() {
+    term();
+
+    while ($look =~ /[+-]/) {
+        emitLn('$d1 = $d0;');
+
+        if ($look eq '+') {
+            add();
+        } elsif ($look eq '-') {
+            subtract();
+        } else {
+            expected("Add operator");
+        }
+    }
+}
+
+sub add() {
+    match("+");
+    term();
+    emitLn('$d0 += $d1;');
+}
+
+sub subtract() {
+    match("-");
+    term();
+    emitLn('$d0 -= $d1;');
+    emitLn('$d0 *= -1;');
+}
+
  MAIN: {
-     init(@ARGV);
+     init();
+     expression();
 }
