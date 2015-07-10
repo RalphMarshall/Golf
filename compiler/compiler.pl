@@ -21,6 +21,10 @@ sub abort($) {
     die "Halting\n";
 }
 
+sub checkPremature() {
+    abort('Premature end of input') unless defined $look;
+}
+
 sub expected($) {
     my ($msg) = @_;
     abort("$msg Expected");
@@ -28,6 +32,9 @@ sub expected($) {
 
 sub match($) {
     my ($char) = @_;
+
+    checkPremature();
+
     if ($look eq $char) {
         getChar();
     } else {
@@ -51,6 +58,8 @@ sub isAddop($) {
 }
 
 sub getName() {
+    checkPremature();
+
     expected('Name') unless isAlpha($look);
     my $retval = uc $look;
     getChar();
@@ -59,6 +68,8 @@ sub getName() {
 }
 
 sub getNum() {
+    checkPremature();
+
     expected('Integer') unless isDigit($look);
     my $retval = $look;
     getChar();
@@ -77,8 +88,8 @@ sub emitLn(@) {
 }
 
 sub init(@) {
-    @input = (split '', <>);
-    @program = ("\t" . 'my ($d0, $d1, @stack);');
+    @input = grep { !/\n/ } (split '', <>);
+    @program = ("\t" . 'my ($d0, $d1, @stack, %vars);');
     getChar();
 }
 
@@ -88,7 +99,7 @@ sub init(@) {
 
 sub term() {
     factor();
-    while ($look =~ m{[*/]}) {
+    while (defined $look && $look =~ m{[*/]}) {
         emitLn('push @stack, $d0;            # LHS of ', $look);
         if ($look eq '*') {
             multiply();
@@ -108,7 +119,7 @@ sub expression() {
         term();
     }
 
-    while ($look =~ /[+-]/) {
+    while (defined $look && $look =~ /[+-]/) {
         emitLn('push @stack, $d0;            # LHS of ', $look);
 
         if ($look eq '+') {
@@ -136,6 +147,8 @@ sub subtract() {
 
 my $nestingLevel = 0;
 sub factor() {
+    checkPremature();
+
     if ($look eq '(') {
         match('(');
         $nestingLevel++;
@@ -145,6 +158,8 @@ sub factor() {
         emitLn("                             # Close paren level $nestingLevel");
         $nestingLevel--;
         match(')');
+    } elsif (isAlpha($look)) {
+        identifier();
     } else {
         my $num = getNum();
         emitLn('$d0 = ', $num, ";                     # Literal $num");
@@ -168,15 +183,38 @@ sub divide() {
 # Lesson Three
 ################################################################
 
+sub identifier() {
+    my $name = getName();
 
+    if ($look eq '(') {
+        match('(');
+        match(')');
+        emitLn("$name();                         # Call function $name");
+    } else {
+        my $varValue = '$vars{"' . $name . '"}';
+        emitLn('$d0 = ', $varValue, ' || 0', ";       # Variable $name");
+    }
+}
+
+sub assignment() {
+    my $name = getName();
+    match('=');
+    expression();
+    emitLn('$vars{"', $name, '"} = $d0;            # Assignment to ', $name);
+}
 
  MAIN: {
      init();
-     expression();
-
-     say join("\n", @program);
+     assignment();
+     if (defined $look) {
+         expected("End of input, not '$look',");
+     }
 
      my $totProg = join("\n", @program);
-     my $result = eval($totProg) || die "Failed to evaluate: $@";
+
+     say $totProg;
+
+     my $result = eval($totProg);
+     die "Failed to evaluate: $@" unless defined $result;
      say "Result is $result";
 }
