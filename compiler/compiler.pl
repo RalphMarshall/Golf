@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use feature qw(say);
 
-my ($look, @input);
+my ($look, @input, @program);
 
 sub getChar() {
     $look = shift @input;
@@ -62,15 +62,18 @@ sub getNum() {
 }
 
 sub emit(@) {
-    print "\t", @_;
+    push @program, "\t" . join('', @_);
+    # print "\t", @_;
 }
 
 sub emitLn(@) {
-    say "\t", @_;
+    push @program, "\t" . join('', @_);
+    # say "\t", @_;
 }
 
 sub init(@) {
     @input = (split '', <>);
+    @program = ("\t" . 'my ($d0, $d1, @stack);');
     getChar();
 }
 
@@ -79,14 +82,24 @@ sub init(@) {
 ################################################################
 
 sub term() {
-    emitLn('$d0 = ', getNum(), ";");
+    factor();
+    while ($look =~ m{[*/]}) {
+        emitLn('push @stack, $d0;');
+        if ($look eq '*') {
+            multiply();
+        } elsif ($look eq '/') {
+            divide();
+        } else {
+            expected("Multiply operator");
+        }
+    }
 }
 
 sub expression() {
     term();
 
     while ($look =~ /[+-]/) {
-        emitLn('$d1 = $d0;');
+        emitLn('push @stack, $d0;');
 
         if ($look eq '+') {
             add();
@@ -101,17 +114,41 @@ sub expression() {
 sub add() {
     match("+");
     term();
-    emitLn('$d0 += $d1;');
+    emitLn('$d0 += pop @stack;');
 }
 
 sub subtract() {
     match("-");
     term();
-    emitLn('$d0 -= $d1;');
+    emitLn('$d0 -= pop @stack;');
     emitLn('$d0 *= -1;');
+}
+
+sub factor() {
+    my $num = getNum();
+    emitLn('$d0 = ', $num, ";");
+}
+
+sub multiply() {
+    match("*");
+    factor();
+    emitLn('$d0 *= pop @stack;');
+}
+
+sub divide() {
+    match("/");
+    factor();
+    emitLn('$d1 = pop @stack;');
+    emitLn('$d0 = $d1/$d0;');
 }
 
  MAIN: {
      init();
      expression();
+
+     say join("\n", @program);
+
+     my $totProg = join("", @program);
+     my $result = eval($totProg) || die "Failed to evaluate: $@";
+     say "Result is $result";
 }
