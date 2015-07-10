@@ -45,6 +45,11 @@ sub isDigit($) {
     return $char =~ /[0-9]/;
 }
 
+sub isAddop($) {
+    my ($char) = @_;
+    return $char =~ /[+-]/;
+}
+
 sub getName() {
     expected('Name') unless isAlpha($look);
     my $retval = uc $look;
@@ -84,7 +89,7 @@ sub init(@) {
 sub term() {
     factor();
     while ($look =~ m{[*/]}) {
-        emitLn('push @stack, $d0;');
+        emitLn('push @stack, $d0;            # LHS of ', $look);
         if ($look eq '*') {
             multiply();
         } elsif ($look eq '/') {
@@ -96,10 +101,15 @@ sub term() {
 }
 
 sub expression() {
-    term();
+
+    if (isAddop($look)) {
+        emitLn('$d0 = 0;                     # Unary ', $look);
+    } else {
+        term();
+    }
 
     while ($look =~ /[+-]/) {
-        emitLn('push @stack, $d0;');
+        emitLn('push @stack, $d0;            # LHS of ', $look);
 
         if ($look eq '+') {
             add();
@@ -114,33 +124,51 @@ sub expression() {
 sub add() {
     match("+");
     term();
-    emitLn('$d0 += pop @stack;');
+    emitLn('$d0 += pop @stack;           # RHS of +');
 }
 
 sub subtract() {
     match("-");
     term();
-    emitLn('$d0 -= pop @stack;');
+    emitLn('$d0 -= pop @stack;           # RHS of -');
     emitLn('$d0 *= -1;');
 }
 
+my $nestingLevel = 0;
 sub factor() {
-    my $num = getNum();
-    emitLn('$d0 = ', $num, ";");
+    if ($look eq '(') {
+        match('(');
+        $nestingLevel++;
+        emitLn("                             # Open paren level $nestingLevel");
+        expression();
+
+        emitLn("                             # Close paren level $nestingLevel");
+        $nestingLevel--;
+        match(')');
+    } else {
+        my $num = getNum();
+        emitLn('$d0 = ', $num, ";                     # Literal $num");
+    }
 }
 
 sub multiply() {
     match("*");
     factor();
-    emitLn('$d0 *= pop @stack;');
+    emitLn('$d0 *= pop @stack;           # RHS of Multiplication');
 }
 
 sub divide() {
     match("/");
     factor();
-    emitLn('$d1 = pop @stack;');
+    emitLn('$d1 = pop @stack;            # RHS of Division');
     emitLn('$d0 = $d1/$d0;');
 }
+
+################################################################
+# Lesson Three
+################################################################
+
+
 
  MAIN: {
      init();
@@ -148,7 +176,7 @@ sub divide() {
 
      say join("\n", @program);
 
-     my $totProg = join("", @program);
+     my $totProg = join("\n", @program);
      my $result = eval($totProg) || die "Failed to evaluate: $@";
      say "Result is $result";
 }
