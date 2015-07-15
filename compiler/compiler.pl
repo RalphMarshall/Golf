@@ -37,6 +37,7 @@ sub match($) {
 
     if ($look eq $char) {
         getChar();
+        skipWhite();
     } else {
         expected("''$char''");
     }
@@ -44,12 +45,12 @@ sub match($) {
 
 sub isAlpha($) {
     my ($char) = @_;
-    return $char =~ /[A-Z]/i;
+    return defined $char && $char =~ /[A-Z]/i;
 }
 
 sub isDigit($) {
     my ($char) = @_;
-    return $char =~ /[0-9]/;
+    return defined $char && $char =~ /[0-9]/;
 }
 
 sub isAddop($) {
@@ -60,21 +61,31 @@ sub isAddop($) {
 sub getName() {
     checkPremature();
 
+    my $token = '';
     expected('Name') unless isAlpha($look);
-    my $retval = uc $look;
-    getChar();
 
-    return $retval;
+    while (isAlphaNumeric($look)) {
+        $token .= uc $look;
+        getChar();
+    }
+    skipWhite();
+
+    return $token;
 }
 
 sub getNum() {
     checkPremature();
 
-    expected('Integer') unless isDigit($look);
-    my $retval = $look;
-    getChar();
+    my $value = '';
 
-    return $retval;
+    expected('Integer') unless isDigit($look);
+    while (isDigit($look)) {
+        $value .= $look;
+        getChar();
+    }
+    skipWhite();
+
+    return $value;
 }
 
 sub emit(@) {
@@ -90,7 +101,9 @@ sub emitLn(@) {
 sub init(@) {
     @input = grep { !/\n/ } (split '', <>);
     @program = ("\t" . 'my ($d0, $d1, @stack, %vars);');
+
     getChar();
+    skipWhite();
 }
 
 ################################################################
@@ -201,6 +214,23 @@ sub assignment() {
     match('=');
     expression();
     emitLn('$vars{"', $name, '"} = $d0;            # Assignment to ', $name);
+}
+
+sub isAlphaNumeric($) {
+
+    my ($char) = @_;
+    return isAlpha($char) || isDigit($char);
+}
+
+sub isWhite($) {
+    my ($char) = @_;
+    return defined $char && $char =~ /\s/;
+}
+
+sub skipWhite() {
+    while (isWhite($look)) {
+        getChar();
+    }
 }
 
  MAIN: {
